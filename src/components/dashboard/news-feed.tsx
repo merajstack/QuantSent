@@ -55,7 +55,11 @@ const mockNews: NewsArticle[] = [
   }
 ];
 
-export function NewsFeed() {
+interface NewsFeedProps {
+  symbol?: string;
+}
+
+export function NewsFeed({ symbol }: NewsFeedProps) {
   return (
     <Card className="shadow-card border-0 bg-gradient-to-br from-card to-muted/30">
       <CardHeader className="pb-4">

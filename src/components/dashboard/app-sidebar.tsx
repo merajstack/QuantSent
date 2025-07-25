@@ -27,11 +27,7 @@ import quantsentHero from "@/assets/quantsent-hero.jpg";
 
 const navigationItems = [
   { title: "Dashboard", url: "/", icon: BarChart3 },
-  { title: "Stock Search", url: "/search", icon: Search },
   { title: "Watchlist", url: "/watchlist", icon: Star },
-  { title: "News Feed", url: "/news", icon: Activity },
-  { title: "Alerts", url: "/alerts", icon: Mail },
-  { title: "Analytics", url: "/analytics", icon: PieChart },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 

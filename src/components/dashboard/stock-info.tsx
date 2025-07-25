@@ -13,9 +13,36 @@ interface StockInfo {
 
 interface StockInfoCardProps {
   stock?: StockInfo;
+  loading?: boolean;
+  error?: string;
 }
 
-export function StockInfoCard({ stock }: StockInfoCardProps) {
+export function StockInfoCard({ stock, loading, error }: StockInfoCardProps) {
+  if (loading) {
+    return (
+      <Card className="shadow-card border-0 bg-gradient-to-br from-card to-muted/30">
+        <CardContent className="flex items-center justify-center h-48">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+            <p className="text-muted-foreground">Loading stock data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="shadow-card border-0 bg-gradient-to-br from-card to-muted/30">
+        <CardContent className="flex items-center justify-center h-48">
+          <div className="text-center text-destructive">
+            <p>Error: {error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!stock) {
     return (
       <Card className="shadow-card border-0 bg-gradient-to-br from-card to-muted/30">
