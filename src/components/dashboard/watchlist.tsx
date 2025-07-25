@@ -1,0 +1,143 @@
+import { useState } from "react";
+import { Star, Bell, BellOff, Trash2, Plus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { SentimentBadge } from "@/components/ui/sentiment-badge";
+import { useToast } from "@/hooks/use-toast";
+
+interface WatchlistStock {
+  symbol: string;
+  price: number;
+  change: number;
+  sentiment: "positive" | "negative" | "neutral";
+  notifications: boolean;
+}
+
+const initialWatchlist: WatchlistStock[] = [
+  {
+    symbol: "AAPL",
+    price: 182.52,
+    change: 2.34,
+    sentiment: "positive",
+    notifications: true
+  },
+  {
+    symbol: "TSLA", 
+    price: 248.87,
+    change: -5.23,
+    sentiment: "negative",
+    notifications: false
+  },
+  {
+    symbol: "MSFT",
+    price: 378.85,
+    change: 1.45,
+    sentiment: "positive",
+    notifications: true
+  }
+];
+
+export function Watchlist() {
+  const [watchlist, setWatchlist] = useState<WatchlistStock[]>(initialWatchlist);
+  const { toast } = useToast();
+
+  const toggleNotifications = (symbol: string) => {
+    setWatchlist(prev => prev.map(stock => 
+      stock.symbol === symbol 
+        ? { ...stock, notifications: !stock.notifications }
+        : stock
+    ));
+    
+    const stock = watchlist.find(s => s.symbol === symbol);
+    toast({
+      title: "Notifications Updated",
+      description: `${symbol} notifications ${stock?.notifications ? 'disabled' : 'enabled'}`,
+    });
+  };
+
+  const removeStock = (symbol: string) => {
+    setWatchlist(prev => prev.filter(stock => stock.symbol !== symbol));
+    toast({
+      title: "Stock Removed",
+      description: `${symbol} removed from watchlist`,
+    });
+  };
+
+  return (
+    <Card className="shadow-card border-0 bg-gradient-to-br from-card to-muted/30">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Star className="h-5 w-5 text-finance-gold" />
+            Watchlist
+          </div>
+          <Button size="sm" variant="outline" className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {watchlist.map((stock, index) => (
+            <div
+              key={stock.symbol}
+              className="p-3 border border-border rounded-lg hover:shadow-md transition-all duration-200 animate-slide-in"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <div className="font-medium">{stock.symbol}</div>
+                    <div className="text-sm text-muted-foreground">
+                      ${stock.price.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className={`text-sm font-medium ${
+                    stock.change >= 0 ? 'text-finance-positive' : 'text-finance-negative'
+                  }`}>
+                    {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <SentimentBadge sentiment={stock.sentiment} />
+                  
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => toggleNotifications(stock.symbol)}
+                    className="p-1 h-8 w-8"
+                  >
+                    {stock.notifications ? (
+                      <Bell className="h-4 w-4 text-primary" />
+                    ) : (
+                      <BellOff className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => removeStock(stock.symbol)}
+                    className="p-1 h-8 w-8 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {watchlist.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <Star className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>No stocks in your watchlist</p>
+              <p className="text-sm">Add stocks to track their sentiment</p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
