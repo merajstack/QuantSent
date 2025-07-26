@@ -1,73 +1,50 @@
-# Welcome to your Lovable project
+Sure! Here’s a clean and professional README.md for QuantSent, excluding any tech stack information:
 
-## Project info
+⸻
 
-**URL**: https://lovable.dev/projects/ff0bd085-cc8d-43ee-9880-0dd37ba2c86b
+📈 QuantSent
 
-## How can I edit this code?
+QuantSent is your intelligent market companion — an AI-powered web platform that provides real-time stock insights, news sentiment analysis, and watchlist management to help you make smarter financial decisions.
 
-There are several ways of editing your application.
+⸻
 
-**Use Lovable**
+🚀 Features
+	•	🔍 Stock Search
+Quickly look up real-time stock prices, daily changes, and performance metrics.
+	•	🧠 AI-Powered Sentiment Analysis
+Analyze the tone of recent news articles to gauge market sentiment for each stock.
+	•	📰 Curated News Feed
+Stay updated with the latest headlines and trends relevant to the companies you follow.
+	•	⭐ Watchlist Tracking
+Add and manage your favorite stocks, toggle notifications, and keep an eye on movements that matter to you.
+	•	📩 Email Alerts (Optional)
+Receive daily or scheduled summaries with price updates and sentiment reports.
+	•	⏰ Scheduling Support
+Set up periodic tasks for data updates and alert automation.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ff0bd085-cc8d-43ee-9880-0dd37ba2c86b) and start prompting.
+⸻
 
-Changes made via Lovable will be committed automatically to this repo.
+📌 Purpose
 
-**Use your preferred IDE**
+QuantSent was built to simplify how traders, investors, and enthusiasts interpret financial data and news sentiment. Instead of manually reading articles and tracking stock prices across platforms, QuantSent centralizes it all in one intuitive dashboard.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+⸻
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+📂 How to Use
+	1.	Search for any publicly traded company by its symbol (e.g., AAPL, TSLA).
+	2.	Analyze the latest sentiment derived from news articles.
+	3.	Track selected stocks by adding them to your personal watchlist.
+	4.	(Optional) Enable email alerts to stay notified of significant changes.
 
-Follow these steps:
+⸻
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+🤝 Contributions
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+We welcome contributions! If you’d like to suggest a feature, fix a bug, or improve performance, feel free to open an issue or submit a pull request.
 
-# Step 3: Install the necessary dependencies.
-npm i
+⸻
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+📬 Feedback
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/ff0bd085-cc8d-43ee-9880-0dd37ba2c86b) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Got feedback or want to share how you’re using QuantSent?
+Drop a message, open a discussion, or connect on LinkedIn.
