@@ -1,4 +1,4 @@
-##📈 QuantSent
+<h1>📈 QuantSent</h1>
 
 QuantSent is your intelligent market companion — an AI-powered web platform that provides real-time stock insights, news sentiment analysis, and watchlist management to help you make smarter financial decisions.
 
