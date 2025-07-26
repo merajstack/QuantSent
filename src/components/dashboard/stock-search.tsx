@@ -17,7 +17,6 @@ export function StockSearch({ onSearch, currentPrice }: StockSearchProps) {
     if (!symbol.trim()) return;
     
     setIsSearching(true);
-    await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
     onSearch(symbol.toUpperCase());
     setIsSearching(false);
   };

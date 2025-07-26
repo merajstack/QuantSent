@@ -1,7 +1,11 @@
-import { ExternalLink, Clock, Newspaper } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ExternalLink, Clock, Newspaper, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { SentimentBadge } from "@/components/ui/sentiment-badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NewsArticle {
   id: string;
@@ -10,68 +14,87 @@ interface NewsArticle {
   url: string;
   publishedAt: string;
   sentiment: "positive" | "negative" | "neutral";
+  description?: string;
+  urlToImage?: string;
 }
-
-const mockNews: NewsArticle[] = [
-  {
-    id: "1",
-    title: "Tech stocks rally as AI sector shows strong growth potential",
-    source: "Financial Times",
-    url: "#",
-    publishedAt: "2 hours ago",
-    sentiment: "positive"
-  },
-  {
-    id: "2", 
-    title: "Market volatility increases amid economic uncertainty",
-    source: "Bloomberg",
-    url: "#",
-    publishedAt: "4 hours ago",
-    sentiment: "negative"
-  },
-  {
-    id: "3",
-    title: "Federal Reserve maintains current interest rates",
-    source: "Reuters",
-    url: "#",
-    publishedAt: "6 hours ago",
-    sentiment: "neutral"
-  },
-  {
-    id: "4",
-    title: "Renewable energy stocks surge on new climate policies",
-    source: "CNBC",
-    url: "#",
-    publishedAt: "8 hours ago",
-    sentiment: "positive"
-  },
-  {
-    id: "5",
-    title: "Banking sector faces regulatory headwinds",
-    source: "Wall Street Journal",
-    url: "#",
-    publishedAt: "12 hours ago",
-    sentiment: "negative"
-  }
-];
 
 interface NewsFeedProps {
   symbol?: string;
 }
 
 export function NewsFeed({ symbol }: NewsFeedProps) {
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const fetchNews = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-stock-news', {
+        body: { symbol: symbol || undefined, category: 'business' }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch news');
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setArticles(data.articles || []);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch news";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNews();
+  }, [symbol]);
+
   return (
     <Card className="shadow-card border-0 bg-gradient-to-br from-card to-muted/30">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2">
-          <Newspaper className="h-5 w-5 text-primary" />
-          News Sentiment Feed
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Newspaper className="h-5 w-5 text-primary" />
+            {symbol ? `${symbol} News` : 'Business News'}
+          </div>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={fetchNews}
+            disabled={loading}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-80">
           <div className="space-y-3">
-            {mockNews.map((article, index) => (
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <RefreshCw className="h-8 w-8 mx-auto mb-2 animate-spin" />
+                <p>Loading news...</p>
+              </div>
+            ) : articles.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Newspaper className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No news articles found</p>
+                <p className="text-sm">Try refreshing or searching for a different stock</p>
+              </div>
+            ) : (
+              articles.map((article, index) => (
               <div
                 key={article.id}
                 className="p-4 border border-border rounded-lg hover:shadow-md transition-all duration-200 animate-slide-in"
@@ -104,7 +127,8 @@ export function NewsFeed({ symbol }: NewsFeedProps) {
                   </div>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </ScrollArea>
       </CardContent>

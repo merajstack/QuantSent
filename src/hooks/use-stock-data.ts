@@ -1,6 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StockData {
   symbol: string;
@@ -30,23 +30,19 @@ export function useStockData() {
     setError(null);
 
     try {
-      // TODO: Replace with your actual API endpoint
-      // const response = await axios.get<StockApiResponse>(`/api/stocks/${symbol}`);
-      
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data - replace with actual API response
-      const mockData: StockData = {
-        symbol: symbol.toUpperCase(),
-        price: Math.random() * 1000 + 50,
-        change: (Math.random() - 0.5) * 20,
-        changePercent: (Math.random() - 0.5) * 10,
-        lastUpdated: new Date().toLocaleString(),
-        sentiment: Math.random() > 0.5 ? "positive" : Math.random() > 0.3 ? "negative" : "neutral"
-      };
+      const { data, error } = await supabase.functions.invoke('fetch-stock-data', {
+        body: { symbol: symbol.toUpperCase() }
+      });
 
-      setStockData(mockData);
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch stock data');
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setStockData(data);
       
       toast({
         title: "Stock Data Updated",
@@ -54,9 +50,7 @@ export function useStockData() {
       });
 
     } catch (err) {
-      const errorMessage = axios.isAxiosError(err) 
-        ? err.response?.data?.message || "Failed to fetch stock data"
-        : "Network error occurred";
+      const errorMessage = err instanceof Error ? err.message : "Network error occurred";
       
       setError(errorMessage);
       toast({

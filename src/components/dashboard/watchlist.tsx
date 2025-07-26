@@ -1,45 +1,59 @@
-import { useState } from "react";
-import { Star, Bell, BellOff, Trash2, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Star, Bell, BellOff, Trash2, Plus, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SentimentBadge } from "@/components/ui/sentiment-badge";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WatchlistStock {
   symbol: string;
   price: number;
   change: number;
+  changePercent: number;
   sentiment: "positive" | "negative" | "neutral";
   notifications: boolean;
+  error?: string;
 }
 
-const initialWatchlist: WatchlistStock[] = [
-  {
-    symbol: "AAPL",
-    price: 182.52,
-    change: 2.34,
-    sentiment: "positive",
-    notifications: true
-  },
-  {
-    symbol: "TSLA", 
-    price: 248.87,
-    change: -5.23,
-    sentiment: "negative",
-    notifications: false
-  },
-  {
-    symbol: "MSFT",
-    price: 378.85,
-    change: 1.45,
-    sentiment: "positive",
-    notifications: true
-  }
-];
+const defaultSymbols = ["AAPL", "TSLA", "MSFT", "GOOGL", "AMZN"];
 
 export function Watchlist() {
-  const [watchlist, setWatchlist] = useState<WatchlistStock[]>(initialWatchlist);
+  const [watchlist, setWatchlist] = useState<WatchlistStock[]>([]);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const fetchWatchlistData = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-watchlist-data', {
+        body: { symbols: defaultSymbols }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch watchlist data');
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setWatchlist(data.watchlist);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch watchlist data";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWatchlistData();
+  }, []);
 
   const toggleNotifications = (symbol: string) => {
     setWatchlist(prev => prev.map(stock => 
@@ -71,10 +85,22 @@ export function Watchlist() {
             <Star className="h-5 w-5 text-finance-gold" />
             Watchlist
           </div>
-          <Button size="sm" variant="outline" className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="gap-2"
+              onClick={fetchWatchlistData}
+              disabled={loading}
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button size="sm" variant="outline" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -93,10 +119,17 @@ export function Watchlist() {
                       ${stock.price.toFixed(2)}
                     </div>
                   </div>
-                  <div className={`text-sm font-medium ${
-                    stock.change >= 0 ? 'text-finance-positive' : 'text-finance-negative'
-                  }`}>
-                    {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}
+                  <div className="text-right">
+                    <div className={`text-sm font-medium ${
+                      stock.change >= 0 ? 'text-finance-positive' : 'text-finance-negative'
+                    }`}>
+                      {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}
+                    </div>
+                    <div className={`text-xs ${
+                      stock.changePercent >= 0 ? 'text-finance-positive' : 'text-finance-negative'
+                    }`}>
+                      ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%)
+                    </div>
                   </div>
                 </div>
                 
