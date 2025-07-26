@@ -1,8 +1,4 @@
-Sure! Here’s a clean and professional README.md for QuantSent, excluding any tech stack information:
-
-⸻
-
-📈 QuantSent
+##📈 QuantSent
 
 QuantSent is your intelligent market companion — an AI-powered web platform that provides real-time stock insights, news sentiment analysis, and watchlist management to help you make smarter financial decisions.
 
