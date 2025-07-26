@@ -1,10 +1,12 @@
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Watchlist } from "@/components/dashboard/watchlist";
+import { ProtectedRoute } from "@/components/auth/protected-route";
 import { AddStockDialog } from "@/components/dashboard/add-stock-dialog";
 
 export default function WatchlistPage() {
   return (
-    <DashboardLayout>
+    <ProtectedRoute>
+      <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -19,5 +21,6 @@ export default function WatchlistPage() {
         <Watchlist />
       </div>
     </DashboardLayout>
+    </ProtectedRoute>
   );
 }
