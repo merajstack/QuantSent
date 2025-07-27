@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SentimentBadge } from "@/components/ui/sentiment-badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
 interface WatchlistStock {
   symbol: string;
@@ -16,22 +17,45 @@ interface WatchlistStock {
   error?: string;
 }
 
-const defaultSymbols = ["AAPL", "TSLA", "MSFT", "GOOGL", "AMZN"];
-
 export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void> }>((props, ref) => {
   const [watchlist, setWatchlist] = useState<WatchlistStock[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useImperativeHandle(ref, () => ({
     addStock
   }));
 
-  const fetchWatchlistData = async () => {
+  const loadUserWatchlist = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: userWatchlist, error } = await supabase
+        .from('watchlist')
+        .select('symbol')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      const symbols = userWatchlist?.map(item => item.symbol) || [];
+      
+      if (symbols.length === 0) {
+        setWatchlist([]);
+        return;
+      }
+
+      await fetchWatchlistData(symbols);
+    } catch (err) {
+      console.error("Failed to load user watchlist:", err);
+    }
+  };
+
+  const fetchWatchlistData = async (symbols: string[]) => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('fetch-watchlist-data', {
-        body: { symbols: defaultSymbols }
+        body: { symbols }
       });
 
       if (error) {
@@ -44,20 +68,17 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
 
       setWatchlist(data.watchlist);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch watchlist data";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error("Failed to fetch watchlist data:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchWatchlistData();
-  }, []);
+    if (user) {
+      loadUserWatchlist();
+    }
+  }, [user]);
 
   const toggleNotifications = (symbol: string) => {
     setWatchlist(prev => prev.map(stock => 
@@ -74,15 +95,53 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
   };
 
   const removeStock = async (symbol: string) => {
-    setWatchlist(prev => prev.filter(stock => stock.symbol !== symbol));
-    toast({
-      title: "Stock Removed",
-      description: `${symbol} removed from watchlist`,
-    });
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('watchlist')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('symbol', symbol);
+
+      if (error) throw error;
+
+      setWatchlist(prev => prev.filter(stock => stock.symbol !== symbol));
+      toast({
+        title: "Stock Removed",
+        description: `${symbol} removed from watchlist`,
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to remove stock from watchlist",
+        variant: "destructive",
+      });
+    }
   };
 
   const addStock = async (symbol: string) => {
+    if (!user) return;
+    
     try {
+      // Check if stock already exists in database
+      const { data: existingStock } = await supabase
+        .from('watchlist')
+        .select('symbol')
+        .eq('user_id', user.id)
+        .eq('symbol', symbol.toUpperCase())
+        .single();
+
+      if (existingStock) {
+        toast({
+          title: "Stock Already Added",
+          description: `${symbol} is already in your watchlist`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Fetch stock data to validate symbol
       const { data, error } = await supabase.functions.invoke('fetch-stock-data', {
         body: { symbol: symbol.toUpperCase() }
       });
@@ -92,8 +151,23 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
       }
 
       if (data.error) {
-        throw new Error(data.error);
+        toast({
+          title: "Invalid Stock Symbol",
+          description: `${symbol} is not a valid stock symbol. Use the AI Assistant to get the correct symbol.`,
+          variant: "destructive",
+        });
+        return;
       }
+
+      // Add to database
+      const { error: insertError } = await supabase
+        .from('watchlist')
+        .insert({
+          user_id: user.id,
+          symbol: data.symbol
+        });
+
+      if (insertError) throw insertError;
 
       const newStock: WatchlistStock = {
         symbol: data.symbol,
@@ -104,30 +178,26 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
         notifications: true
       };
 
-      setWatchlist(prev => {
-        // Check if stock already exists
-        if (prev.some(stock => stock.symbol === newStock.symbol)) {
-          toast({
-            title: "Stock Already Added",
-            description: `${symbol} is already in your watchlist`,
-            variant: "destructive",
-          });
-          return prev;
-        }
-        
-        toast({
-          title: "Stock Added",
-          description: `${symbol} added to watchlist`,
-        });
-        return [...prev, newStock];
+      setWatchlist(prev => [...prev, newStock]);
+      toast({
+        title: "Stock Added",
+        description: `${symbol} added to watchlist`,
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to add stock";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      if (errorMessage.includes('not found') || errorMessage.includes('invalid')) {
+        toast({
+          title: "Invalid Stock Symbol",
+          description: `${symbol} is not a valid stock symbol. Use the AI Assistant to get the correct symbol.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -144,7 +214,7 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
               size="sm" 
               variant="outline" 
               className="gap-2"
-              onClick={fetchWatchlistData}
+              onClick={loadUserWatchlist}
               disabled={loading}
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />

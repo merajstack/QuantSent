@@ -7,7 +7,7 @@ interface UseAutoRefreshOptions {
 
 export function useAutoRefresh(
   callback: () => void,
-  { enabled = true, interval = 2000 }: UseAutoRefreshOptions = {}
+  { enabled = true, interval = 3000 }: UseAutoRefreshOptions = {}
 ) {
   const savedCallback = useRef<() => void>();
 

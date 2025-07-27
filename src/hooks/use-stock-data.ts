@@ -43,11 +43,6 @@ export function useStockData() {
       }
 
       setStockData(data);
-      
-      toast({
-        title: "Stock Data Updated",
-        description: `Fetched latest data for ${symbol}`,
-      });
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Network error occurred";

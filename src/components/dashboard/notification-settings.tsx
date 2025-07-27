@@ -10,8 +10,7 @@ export function NotificationSettings() {
   const [settings, setSettings] = useState({
     priceAlerts: true,
     sentimentAlerts: false,
-    dailyTime: "09:00",
-    weeklyTime: "monday"
+    dailyTime: "09:00"
   });
   const { toast } = useToast();
 
@@ -87,25 +86,6 @@ export function NotificationSettings() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-base">
-              <Mail className="h-4 w-4" />
-              Weekly Summary Day
-            </Label>
-            <Select
-              value={settings.weeklyTime}
-              onValueChange={(value) => handleSettingChange("weeklyTime", value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="monday">Monday</SelectItem>
-                <SelectItem value="friday">Friday</SelectItem>
-                <SelectItem value="sunday">Sunday</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
       </CardContent>
     </Card>
