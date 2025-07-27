@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, User, Moon, Sun, Settings, LogOut } from "lucide-react";
+import { Search, Bot, User, Moon, Sun, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -63,11 +63,13 @@ export function DashboardHeader() {
             )}
           </Button>
 
-          <Button variant="ghost" size="icon" className="h-9 w-9 relative">
-            <Bell className="h-4 w-4" />
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full text-[10px] flex items-center justify-center text-white">
-              3
-            </span>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-9 w-9"
+            onClick={() => window.open('https://fin-bot-pv8q.onrender.com/', '_blank')}
+          >
+            <Bot className="h-4 w-4" />
           </Button>
 
           <DropdownMenu>

@@ -3,9 +3,11 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { StockSearch } from "@/components/dashboard/stock-search";
 import { StockInfoCard } from "@/components/dashboard/stock-info";
 import { NewsFeed } from "@/components/dashboard/news-feed";
+import { StockComparison } from "@/components/dashboard/stock-comparison";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { useStockData } from "@/hooks/use-stock-data";
 import { useAutoRefresh } from "@/hooks/use-auto-refresh";
+import { useMarketTime } from "@/hooks/use-market-time";
 
 interface StockInfo {
   symbol: string;
@@ -19,18 +21,19 @@ interface StockInfo {
 export default function Dashboard() {
   const [selectedStock, setSelectedStock] = useState<string>("");
   const { stockData, loading, error, fetchStock } = useStockData();
+  const { marketTime, isMarketOpen } = useMarketTime();
 
   const handleStockSearch = async (symbol: string) => {
     setSelectedStock(symbol);
     await fetchStock(symbol);
   };
 
-  // Auto-refresh stock data every 3 seconds if a stock is selected
+  // Auto-refresh stock data every 2 seconds if a stock is selected
   useAutoRefresh(() => {
     if (selectedStock) {
       fetchStock(selectedStock);
     }
-  }, { enabled: !!selectedStock, interval: 3000 });
+  }, { enabled: !!selectedStock, interval: 2000 });
 
   return (
     <ProtectedRoute>
@@ -44,12 +47,18 @@ export default function Dashboard() {
           <p className="text-muted-foreground">
             Get real-time sentiment analysis and market insights powered by AI
           </p>
-          {selectedStock && (
-            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-              Auto-refreshing {selectedStock} data every 3 seconds
+          <div className="flex flex-wrap gap-3 mt-3">
+            {selectedStock && (
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                Auto-refreshing {selectedStock} data every 2 seconds
+              </div>
+            )}
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-secondary/10 text-secondary-foreground rounded-full text-sm">
+              <div className={`w-2 h-2 rounded-full ${isMarketOpen ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              US Market {marketTime} ({isMarketOpen ? 'Open' : 'Closed'})
             </div>
-          )}
+          </div>
         </div>
 
         {/* Main Content Grid */}
@@ -59,7 +68,10 @@ export default function Dashboard() {
             <StockSearch 
               onSearch={handleStockSearch}
               currentPrice={stockData?.price}
+              stockData={stockData}
             />
+            
+            <StockComparison />
             
             <StockInfoCard 
               stock={stockData}

@@ -1,17 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 
 interface StockSearchProps {
   onSearch: (symbol: string) => void;
   currentPrice?: number;
+  stockData?: any;
 }
 
-export function StockSearch({ onSearch, currentPrice }: StockSearchProps) {
+export function StockSearch({ onSearch, currentPrice, stockData }: StockSearchProps) {
   const [symbol, setSymbol] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [chartData, setChartData] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (stockData) {
+      // Generate mock historical data for visualization
+      const mockData = [];
+      const basePrice = stockData.price;
+      for (let i = 6; i >= 0; i--) {
+        const variation = (Math.random() - 0.5) * 0.1;
+        mockData.push({
+          time: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          price: basePrice * (1 + variation)
+        });
+      }
+      setChartData(mockData);
+    }
+  }, [stockData]);
 
   const handleSearch = async () => {
     if (!symbol.trim()) return;
@@ -66,6 +86,35 @@ export function StockSearch({ onSearch, currentPrice }: StockSearchProps) {
             <div className="text-2xl font-bold text-primary animate-pulse-glow">
               ${currentPrice.toFixed(2)}
             </div>
+          </div>
+        )}
+
+        {stockData && chartData.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold mb-2">Price Chart (7 Days)</h3>
+            <ChartContainer 
+              config={{
+                price: {
+                  label: "Price",
+                  color: "hsl(var(--primary))",
+                },
+              }}
+              className="h-[200px]"
+            >
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="time" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line 
+                  type="monotone" 
+                  dataKey="price" 
+                  stroke="var(--color-price)" 
+                  strokeWidth={2}
+                  dot={{ fill: "var(--color-price)" }}
+                />
+              </LineChart>
+            </ChartContainer>
           </div>
         )}
       </CardContent>

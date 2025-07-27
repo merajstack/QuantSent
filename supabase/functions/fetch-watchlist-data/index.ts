@@ -23,7 +23,7 @@ serve(async (req) => {
       )
     }
 
-    const apiKey = Deno.env.get('TWELVE_DATA_API_KEY')
+    const apiKey = Deno.env.get('TWELVE_DATA_API_KEY') || '855ede4efd3a442d86ba8c4befdf426c'
     if (!apiKey) {
       return new Response(
         JSON.stringify({ error: 'API key not configured' }),

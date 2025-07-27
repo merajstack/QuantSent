@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Star, Bell, BellOff, Trash2, Plus, RefreshCw } from "lucide-react";
+import { Star, Bot, Trash2, RefreshCw, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SentimentBadge } from "@/components/ui/sentiment-badge";
@@ -96,9 +96,14 @@ export function Watchlist() {
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
-            <Button size="sm" variant="outline" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => window.open('https://fin-bot-pv8q.onrender.com/', '_blank')}
+            >
+              <Bot className="h-4 w-4" />
+              AI Bot
             </Button>
           </div>
         </CardTitle>
@@ -135,19 +140,6 @@ export function Watchlist() {
                 
                 <div className="flex items-center gap-2">
                   <SentimentBadge sentiment={stock.sentiment} />
-                  
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => toggleNotifications(stock.symbol)}
-                    className="p-1 h-8 w-8"
-                  >
-                    {stock.notifications ? (
-                      <Bell className="h-4 w-4 text-primary" />
-                    ) : (
-                      <BellOff className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
                   
                   <Button
                     size="sm"
