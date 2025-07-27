@@ -56,11 +56,11 @@ export function DashboardHeader() {
 
           <Button 
             variant="ghost" 
-            size="icon" 
-            className="h-9 w-9"
+            size="sm" 
+            className="h-9 px-3"
             onClick={() => window.open('https://fin-bot-pv8q.onrender.com/', '_blank')}
           >
-            <Bot className="h-4 w-4" />
+            <span className="font-bold text-primary">AI</span>
           </Button>
 
           <DropdownMenu>
