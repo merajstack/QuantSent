@@ -2,6 +2,24 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface FinancialRatios {
+  peRatio: number | null;
+  pegRatio: number | null;
+  pbRatio: number | null;
+  priceToSales: number | null;
+  debtToEquity: number | null;
+  returnOnEquity: number | null;
+  returnOnAssets: number | null;
+  profitMargin: number | null;
+  operatingMargin: number | null;
+  currentRatio: number | null;
+  quickRatio: number | null;
+  dividendYield: number | null;
+  beta: number | null;
+  eps: number | null;
+  marketCap: number | null;
+}
+
 interface StockData {
   symbol: string;
   price: number;
@@ -9,6 +27,7 @@ interface StockData {
   changePercent: number;
   lastUpdated: string;
   sentiment: "positive" | "negative" | "neutral";
+  financialRatios?: FinancialRatios | null;
 }
 
 interface StockApiResponse {

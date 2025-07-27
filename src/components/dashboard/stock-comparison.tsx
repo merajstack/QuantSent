@@ -7,6 +7,8 @@ import { useStockData } from "@/hooks/use-stock-data";
 import { useToast } from "@/hooks/use-toast";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 export function StockComparison() {
   const [stock1, setStock1] = useState("");
@@ -27,40 +29,45 @@ export function StockComparison() {
 
     setLoading(true);
     try {
-      // Fetch both stocks
-      const [response1, response2] = await Promise.all([
-        fetch(`https://api.twelvedata.com/quote?symbol=${stock1.toUpperCase()}&apikey=855ede4efd3a442d86ba8c4befdf426c`),
-        fetch(`https://api.twelvedata.com/quote?symbol=${stock2.toUpperCase()}&apikey=855ede4efd3a442d86ba8c4befdf426c`)
+      // Fetch both stocks using Supabase edge function
+      const [{ data: data1, error: error1 }, { data: data2, error: error2 }] = await Promise.all([
+        supabase.functions.invoke('fetch-stock-data', {
+          body: { symbol: stock1.toUpperCase() }
+        }),
+        supabase.functions.invoke('fetch-stock-data', {
+          body: { symbol: stock2.toUpperCase() }
+        })
       ]);
 
-      const [data1, data2] = await Promise.all([
-        response1.json(),
-        response2.json()
-      ]);
+      if (error1 || error2) {
+        throw new Error(error1?.message || error2?.message || 'Failed to fetch stock data');
+      }
 
-      if (data1.status === 'error' || data2.status === 'error') {
-        throw new Error(data1.message || data2.message || 'Invalid symbols');
+      if (data1.error || data2.error) {
+        throw new Error(data1.error || data2.error);
       }
 
       // Create comparison data
       const comparison = {
         stock1: {
           symbol: data1.symbol,
-          price: parseFloat(data1.close) || 0,
-          change: parseFloat(data1.change) || 0,
-          changePercent: parseFloat(data1.percent_change) || 0,
+          price: data1.price,
+          change: data1.change,
+          changePercent: data1.changePercent,
           volume: data1.volume,
-          high: parseFloat(data1.high) || 0,
-          low: parseFloat(data1.low) || 0,
+          high: data1.high,
+          low: data1.low,
+          financialRatios: data1.financialRatios,
         },
         stock2: {
           symbol: data2.symbol,
-          price: parseFloat(data2.close) || 0,
-          change: parseFloat(data2.change) || 0,
-          changePercent: parseFloat(data2.percent_change) || 0,
+          price: data2.price,
+          change: data2.change,
+          changePercent: data2.changePercent,
           volume: data2.volume,
-          high: parseFloat(data2.high) || 0,
-          low: parseFloat(data2.low) || 0,
+          high: data2.high,
+          low: data2.low,
+          financialRatios: data2.financialRatios,
         }
       };
 
@@ -185,6 +192,52 @@ export function StockComparison() {
                 />
               </LineChart>
             </ChartContainer>
+
+            {/* Financial Ratios Comparison */}
+            {(comparisonData.stock1.financialRatios || comparisonData.stock2.financialRatios) && (
+              <div className="space-y-4">
+                <h4 className="font-semibold text-lg">Financial Ratios Comparison</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { label: "P/E Ratio", key: "peRatio" },
+                    { label: "P/B Ratio", key: "pbRatio" },
+                    { label: "ROE", key: "returnOnEquity", isPercentage: true },
+                    { label: "ROA", key: "returnOnAssets", isPercentage: true },
+                    { label: "Debt/Equity", key: "debtToEquity" },
+                    { label: "Current Ratio", key: "currentRatio" },
+                  ].map((ratio) => (
+                    <div key={ratio.key} className="p-3 bg-muted/30 rounded-lg">
+                      <div className="text-sm font-medium mb-2">{ratio.label}</div>
+                      <div className="flex justify-between items-center">
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground">{comparisonData.stock1.symbol}</div>
+                          <Badge variant="outline" className="mt-1">
+                            {comparisonData.stock1.financialRatios?.[ratio.key] !== null 
+                              ? ratio.isPercentage 
+                                ? `${(comparisonData.stock1.financialRatios?.[ratio.key] * 100).toFixed(2)}%`
+                                : comparisonData.stock1.financialRatios?.[ratio.key]?.toFixed(2)
+                              : "N/A"
+                            }
+                          </Badge>
+                        </div>
+                        <div className="text-vs text-muted-foreground">vs</div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted-foreground">{comparisonData.stock2.symbol}</div>
+                          <Badge variant="outline" className="mt-1">
+                            {comparisonData.stock2.financialRatios?.[ratio.key] !== null 
+                              ? ratio.isPercentage 
+                                ? `${(comparisonData.stock2.financialRatios?.[ratio.key] * 100).toFixed(2)}%`
+                                : comparisonData.stock2.financialRatios?.[ratio.key]?.toFixed(2)
+                              : "N/A"
+                            }
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

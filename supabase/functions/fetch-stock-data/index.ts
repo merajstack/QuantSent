@@ -34,10 +34,11 @@ serve(async (req) => {
       )
     }
 
-    // Fetch real-time quote
-    const quoteResponse = await fetch(
-      `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${apiKey}`
-    )
+    // Fetch real-time quote and fundamentals concurrently
+    const [quoteResponse, fundamentalsResponse] = await Promise.all([
+      fetch(`https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${apiKey}`),
+      fetch(`https://api.twelvedata.com/fundamentals?symbol=${symbol}&apikey=${apiKey}`)
+    ])
     
     if (!quoteResponse.ok) {
       throw new Error('Failed to fetch stock data')
@@ -55,9 +56,41 @@ serve(async (req) => {
       )
     }
 
+    // Parse fundamentals data (may fail for some stocks)
+    let fundamentalsData = null
+    if (fundamentalsResponse.ok) {
+      try {
+        const fundamentals = await fundamentalsResponse.json()
+        if (fundamentals.status !== 'error') {
+          fundamentalsData = fundamentals
+        }
+      } catch (error) {
+        console.log('Failed to parse fundamentals data:', error)
+      }
+    }
+
     // Calculate sentiment based on price change
     const change = parseFloat(quoteData.change) || 0
     const sentiment = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral'
+
+    // Extract financial ratios from fundamentals data
+    const financialRatios = fundamentalsData ? {
+      peRatio: fundamentalsData.valuation?.pe_ratio || null,
+      pegRatio: fundamentalsData.valuation?.peg_ratio || null,
+      pbRatio: fundamentalsData.valuation?.pb_ratio || null,
+      priceToSales: fundamentalsData.valuation?.ps_ratio || null,
+      debtToEquity: fundamentalsData.financials?.balance_sheet?.debt_to_equity || null,
+      returnOnEquity: fundamentalsData.financials?.income_statement?.roe || null,
+      returnOnAssets: fundamentalsData.financials?.income_statement?.roa || null,
+      profitMargin: fundamentalsData.financials?.income_statement?.profit_margin || null,
+      operatingMargin: fundamentalsData.financials?.income_statement?.operating_margin || null,
+      currentRatio: fundamentalsData.financials?.balance_sheet?.current_ratio || null,
+      quickRatio: fundamentalsData.financials?.balance_sheet?.quick_ratio || null,
+      dividendYield: fundamentalsData.statistics?.dividend_yield || null,
+      beta: fundamentalsData.statistics?.beta || null,
+      eps: fundamentalsData.financials?.income_statement?.eps || null,
+      marketCap: fundamentalsData.statistics?.market_capitalization || null
+    } : null
 
     const stockData = {
       symbol: quoteData.symbol,
@@ -69,7 +102,8 @@ serve(async (req) => {
       volume: quoteData.volume,
       high: parseFloat(quoteData.high) || 0,
       low: parseFloat(quoteData.low) || 0,
-      open: parseFloat(quoteData.open) || 0
+      open: parseFloat(quoteData.open) || 0,
+      financialRatios: financialRatios
     }
 
     return new Response(

@@ -4,6 +4,7 @@ import { StockSearch } from "@/components/dashboard/stock-search";
 import { StockInfoCard } from "@/components/dashboard/stock-info";
 import { NewsFeed } from "@/components/dashboard/news-feed";
 import { StockComparison } from "@/components/dashboard/stock-comparison";
+import { FinancialRatios } from "@/components/dashboard/financial-ratios";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { useStockData } from "@/hooks/use-stock-data";
 import { useAutoRefresh } from "@/hooks/use-auto-refresh";
@@ -78,6 +79,13 @@ export default function Dashboard() {
               loading={loading}
               error={error}
             />
+            
+            {stockData && (
+              <FinancialRatios 
+                ratios={stockData.financialRatios} 
+                symbol={stockData.symbol} 
+              />
+            )}
           </div>
 
           {/* Right Column */}
