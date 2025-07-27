@@ -10,6 +10,7 @@ import {
   PieChart,
   Activity
 } from "lucide-react";
+import { useMarketTime } from "@/hooks/use-market-time";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -36,6 +37,7 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+  const { marketTime, isMarketOpen } = useMarketTime();
 
   const isActive = (path: string) => currentPath === path;
   const getNavClass = ({ isActive }: { isActive: boolean }) =>
@@ -101,8 +103,11 @@ export function AppSidebar() {
                 <TrendingUp className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium">Live Markets</span>
               </div>
-              <div className="text-xs text-muted-foreground">
-                Market opens in 2h 15m
+              <div className="text-xs text-muted-foreground mb-1">
+                {marketTime}
+              </div>
+              <div className={`text-xs font-medium ${isMarketOpen ? 'text-finance-positive' : 'text-finance-negative'}`}>
+                Market {isMarketOpen ? 'Open' : 'Closed'}
               </div>
             </div>
           </div>

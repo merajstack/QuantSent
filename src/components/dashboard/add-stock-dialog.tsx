@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
-export function AddStockDialog() {
+interface AddStockDialogProps {
+  onAddStock?: (symbol: string) => Promise<void>;
+}
+
+export function AddStockDialog({ onAddStock }: AddStockDialogProps) {
   const [open, setOpen] = useState(false);
   const [symbol, setSymbol] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,26 +21,14 @@ export function AddStockDialog() {
     setLoading(true);
     
     try {
-      // TODO: Replace with actual API call
-      // await axios.post('/api/watchlist', { symbol: symbol.toUpperCase() });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Play cha-ching animation/sound effect here
-      toast({
-        title: "💰 Stock Added!",
-        description: `${symbol.toUpperCase()} has been added to your watchlist`,
-      });
+      if (onAddStock) {
+        await onAddStock(symbol.toUpperCase());
+      }
       
       setSymbol("");
       setOpen(false);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add stock to watchlist",
-        variant: "destructive",
-      });
+      // Error handling is done in the parent component
     } finally {
       setLoading(false);
     }

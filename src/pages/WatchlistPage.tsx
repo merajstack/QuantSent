@@ -2,8 +2,17 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Watchlist } from "@/components/dashboard/watchlist";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { AddStockDialog } from "@/components/dashboard/add-stock-dialog";
+import { useRef } from "react";
 
 export default function WatchlistPage() {
+  const watchlistRef = useRef<{ addStock: (symbol: string) => Promise<void> }>(null);
+
+  const handleAddStock = async (symbol: string) => {
+    if (watchlistRef.current) {
+      await watchlistRef.current.addStock(symbol);
+    }
+  };
+
   return (
     <ProtectedRoute>
       <DashboardLayout>
@@ -15,10 +24,10 @@ export default function WatchlistPage() {
               Track your favorite stocks and their sentiment in real-time
             </p>
           </div>
-          <AddStockDialog />
+          <AddStockDialog onAddStock={handleAddStock} />
         </div>
 
-        <Watchlist />
+        <Watchlist ref={watchlistRef} />
       </div>
     </DashboardLayout>
     </ProtectedRoute>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Star, Bot, Trash2, RefreshCw, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,10 +18,14 @@ interface WatchlistStock {
 
 const defaultSymbols = ["AAPL", "TSLA", "MSFT", "GOOGL", "AMZN"];
 
-export function Watchlist() {
+export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void> }>((props, ref) => {
   const [watchlist, setWatchlist] = useState<WatchlistStock[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  useImperativeHandle(ref, () => ({
+    addStock
+  }));
 
   const fetchWatchlistData = async () => {
     setLoading(true);
@@ -69,12 +73,62 @@ export function Watchlist() {
     });
   };
 
-  const removeStock = (symbol: string) => {
+  const removeStock = async (symbol: string) => {
     setWatchlist(prev => prev.filter(stock => stock.symbol !== symbol));
     toast({
       title: "Stock Removed",
       description: `${symbol} removed from watchlist`,
     });
+  };
+
+  const addStock = async (symbol: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-stock-data', {
+        body: { symbol: symbol.toUpperCase() }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to fetch stock data');
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      const newStock: WatchlistStock = {
+        symbol: data.symbol,
+        price: data.price,
+        change: data.change,
+        changePercent: data.changePercent,
+        sentiment: data.sentiment,
+        notifications: true
+      };
+
+      setWatchlist(prev => {
+        // Check if stock already exists
+        if (prev.some(stock => stock.symbol === newStock.symbol)) {
+          toast({
+            title: "Stock Already Added",
+            description: `${symbol} is already in your watchlist`,
+            variant: "destructive",
+          });
+          return prev;
+        }
+        
+        toast({
+          title: "Stock Added",
+          description: `${symbol} added to watchlist`,
+        });
+        return [...prev, newStock];
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to add stock";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -165,4 +219,4 @@ export function Watchlist() {
       </CardContent>
     </Card>
   );
-}
+});

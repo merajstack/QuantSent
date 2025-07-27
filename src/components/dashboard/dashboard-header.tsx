@@ -38,15 +38,6 @@ export function DashboardHeader() {
       <div className="flex items-center justify-between px-4 h-full">
         <div className="flex items-center gap-4">
           <SidebarTrigger className="lg:hidden" />
-          <div className="hidden sm:flex items-center gap-2 max-w-sm">
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Quick search..."
-                className="pl-8 w-64"
-              />
-            </div>
-          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -90,10 +81,6 @@ export function DashboardHeader() {
               <DropdownMenuItem onClick={() => navigate('/settings')}>
                 <User className="mr-2 h-4 w-4" />
                 Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/settings')}>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>
