@@ -224,7 +224,7 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
               size="sm" 
               variant="outline" 
               className="gap-2"
-              onClick={() => window.open('https://fin-bot-pv8q.onrender.com/', '_blank')}
+              onClick={() => window.open('https://fin-bot-1-67ai.onrender.com/', '_blank')}
             >
               <span className="font-bold text-primary">AI</span>
             </Button>

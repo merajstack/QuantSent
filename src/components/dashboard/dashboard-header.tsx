@@ -58,7 +58,7 @@ export function DashboardHeader() {
             variant="ghost" 
             size="sm" 
             className="h-9 px-3"
-            onClick={() => window.open('https://fin-bot-pv8q.onrender.com/', '_blank')}
+            onClick={() => window.open('https://fin-bot-1-67ai.onrender.com/', '_blank')}
           >
             <span className="font-bold text-primary">AI</span>
           </Button>
