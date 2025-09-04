@@ -3,11 +3,10 @@ import { TrendingUp, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useStockData } from "@/hooks/use-stock-data";
 import { useToast } from "@/hooks/use-toast";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchStockData } from "@/services/stock-api";
 import { Badge } from "@/components/ui/badge";
 
 export function StockComparison() {
@@ -29,23 +28,11 @@ export function StockComparison() {
 
     setLoading(true);
     try {
-      // Fetch both stocks using Supabase edge function
-      const [{ data: data1, error: error1 }, { data: data2, error: error2 }] = await Promise.all([
-        supabase.functions.invoke('fetch-stock-data', {
-          body: { symbol: stock1.toUpperCase() }
-        }),
-        supabase.functions.invoke('fetch-stock-data', {
-          body: { symbol: stock2.toUpperCase() }
-        })
+      // Fetch both stocks using direct API calls
+      const [data1, data2] = await Promise.all([
+        fetchStockData(stock1.toUpperCase()),
+        fetchStockData(stock2.toUpperCase())
       ]);
-
-      if (error1 || error2) {
-        throw new Error(error1?.message || error2?.message || 'Failed to fetch stock data');
-      }
-
-      if (data1.error || data2.error) {
-        throw new Error(data1.error || data2.error);
-      }
 
       // Create comparison data
       const comparison = {

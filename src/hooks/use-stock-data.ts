@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchStockData } from "@/services/stock-api";
 
 interface FinancialRatios {
   peRatio: number | null;
@@ -49,20 +49,8 @@ export function useStockData() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('fetch-stock-data', {
-        body: { symbol: symbol.toUpperCase() }
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to fetch stock data');
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
+      const data = await fetchStockData(symbol);
       setStockData(data);
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Network error occurred";
       

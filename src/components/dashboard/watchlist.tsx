@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SentimentBadge } from "@/components/ui/sentiment-badge";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchStockData, fetchMultipleStocks } from "@/services/stock-api";
 
 interface WatchlistStock {
   symbol: string;
@@ -53,19 +53,11 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
   const fetchWatchlistData = async (symbols: string[]) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('fetch-watchlist-data', {
-        body: { symbols }
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to fetch watchlist data');
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setWatchlist(data.watchlist);
+      const stocks = await fetchMultipleStocks(symbols);
+      setWatchlist(stocks.map(stock => ({
+        ...stock,
+        notifications: true
+      })));
     } catch (err) {
       console.error("Failed to fetch watchlist data:", err);
     } finally {
@@ -122,22 +114,7 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
       }
 
       // Fetch stock data to validate symbol
-      const { data, error } = await supabase.functions.invoke('fetch-stock-data', {
-        body: { symbol: symbol.toUpperCase() }
-      });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to fetch stock data');
-      }
-
-      if (data.error) {
-        toast({
-          title: "Invalid Stock Symbol",
-          description: `${symbol} is not a valid stock symbol. Use the AI Assistant to get the correct symbol.`,
-          variant: "destructive",
-        });
-        return;
-      }
+      const data = await fetchStockData(symbol);
 
       const newStock: WatchlistStock = {
         symbol: data.symbol,
@@ -161,19 +138,11 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to add stock";
-      if (errorMessage.includes('not found') || errorMessage.includes('invalid')) {
-        toast({
-          title: "Invalid Stock Symbol",
-          description: `${symbol} is not a valid stock symbol. Use the AI Assistant to get the correct symbol.`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Invalid Stock Symbol",
+        description: `${symbol} is not a valid stock symbol. Please check the symbol and try again.`,
+        variant: "destructive",
+      });
     }
   };
 
