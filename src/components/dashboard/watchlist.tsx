@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { SentimentBadge } from "@/components/ui/sentiment-badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
 
 interface WatchlistStock {
   symbol: string;
@@ -21,34 +20,34 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
   const [watchlist, setWatchlist] = useState<WatchlistStock[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
 
   useImperativeHandle(ref, () => ({
     addStock
   }));
 
-  const loadUserWatchlist = async () => {
-    if (!user) return;
-    
+  // Load watchlist from localStorage
+  const loadWatchlist = () => {
     try {
-      const { data: userWatchlist, error } = await supabase
-        .from('watchlist')
-        .select('symbol')
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      const symbols = userWatchlist?.map(item => item.symbol) || [];
-      
-      if (symbols.length === 0) {
+      const saved = localStorage.getItem('stockWatchlist');
+      if (saved) {
+        const symbols = JSON.parse(saved);
+        if (symbols.length > 0) {
+          fetchWatchlistData(symbols);
+        } else {
+          setWatchlist([]);
+        }
+      } else {
         setWatchlist([]);
-        return;
       }
-
-      await fetchWatchlistData(symbols);
     } catch (err) {
-      console.error("Failed to load user watchlist:", err);
+      console.error("Failed to load watchlist:", err);
+      setWatchlist([]);
     }
+  };
+
+  // Save watchlist symbols to localStorage
+  const saveWatchlistSymbols = (symbols: string[]) => {
+    localStorage.setItem('stockWatchlist', JSON.stringify(symbols));
   };
 
   const fetchWatchlistData = async (symbols: string[]) => {
@@ -75,10 +74,8 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
   };
 
   useEffect(() => {
-    if (user) {
-      loadUserWatchlist();
-    }
-  }, [user]);
+    loadWatchlist();
+  }, []);
 
   const toggleNotifications = (symbol: string) => {
     setWatchlist(prev => prev.map(stock => 
@@ -94,43 +91,26 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
     });
   };
 
-  const removeStock = async (symbol: string) => {
-    if (!user) return;
+  const removeStock = (symbol: string) => {
+    const updatedWatchlist = watchlist.filter(stock => stock.symbol !== symbol);
+    setWatchlist(updatedWatchlist);
     
-    try {
-      const { error } = await supabase
-        .from('watchlist')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('symbol', symbol);
-
-      if (error) throw error;
-
-      setWatchlist(prev => prev.filter(stock => stock.symbol !== symbol));
-      toast({
-        title: "Stock Removed",
-        description: `${symbol} removed from watchlist`,
-      });
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to remove stock from watchlist",
-        variant: "destructive",
-      });
-    }
+    // Update localStorage
+    const symbols = updatedWatchlist.map(stock => stock.symbol);
+    saveWatchlistSymbols(symbols);
+    
+    toast({
+      title: "Stock Removed",
+      description: `${symbol} removed from watchlist`,
+    });
   };
 
   const addStock = async (symbol: string) => {
-    if (!user) return;
-    
     try {
-      // Check if stock already exists in database
-      const { data: existingStock } = await supabase
-        .from('watchlist')
-        .select('symbol')
-        .eq('user_id', user.id)
-        .eq('symbol', symbol.toUpperCase())
-        .single();
+      // Check if stock already exists in watchlist
+      const existingStock = watchlist.find(stock => 
+        stock.symbol.toUpperCase() === symbol.toUpperCase()
+      );
 
       if (existingStock) {
         toast({
@@ -159,16 +139,6 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
         return;
       }
 
-      // Add to database
-      const { error: insertError } = await supabase
-        .from('watchlist')
-        .insert({
-          user_id: user.id,
-          symbol: data.symbol
-        });
-
-      if (insertError) throw insertError;
-
       const newStock: WatchlistStock = {
         symbol: data.symbol,
         price: data.price,
@@ -178,7 +148,13 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
         notifications: true
       };
 
-      setWatchlist(prev => [...prev, newStock]);
+      const updatedWatchlist = [...watchlist, newStock];
+      setWatchlist(updatedWatchlist);
+      
+      // Update localStorage
+      const symbols = updatedWatchlist.map(stock => stock.symbol);
+      saveWatchlistSymbols(symbols);
+      
       toast({
         title: "Stock Added",
         description: `${symbol} added to watchlist`,
@@ -214,7 +190,7 @@ export const Watchlist = forwardRef<{ addStock: (symbol: string) => Promise<void
               size="sm" 
               variant="outline" 
               className="gap-2"
-              onClick={loadUserWatchlist}
+              onClick={loadWatchlist}
               disabled={loading}
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />

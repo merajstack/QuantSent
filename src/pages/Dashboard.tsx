@@ -5,7 +5,6 @@ import { StockInfoCard } from "@/components/dashboard/stock-info";
 import { NewsFeed } from "@/components/dashboard/news-feed";
 import { StockComparison } from "@/components/dashboard/stock-comparison";
 import { FinancialRatios } from "@/components/dashboard/financial-ratios";
-import { ProtectedRoute } from "@/components/auth/protected-route";
 import { useStockData } from "@/hooks/use-stock-data";
 import { useAutoRefresh } from "@/hooks/use-auto-refresh";
 import { useMarketTime } from "@/hooks/use-market-time";
@@ -37,8 +36,7 @@ export default function Dashboard() {
   }, { enabled: !!selectedStock, interval: 2000 });
 
   return (
-    <ProtectedRoute>
-      <DashboardLayout>
+    <DashboardLayout>
       <div className="space-y-6">
         {/* Hero Section */}
         <div className="bg-gradient-to-r from-primary/10 to-finance-gold/10 rounded-lg p-6 border border-primary/20">
@@ -95,6 +93,5 @@ export default function Dashboard() {
         </div>
       </div>
     </DashboardLayout>
-    </ProtectedRoute>
   );
 }
