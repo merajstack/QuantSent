@@ -8,8 +8,8 @@ interface NewsArticle {
   sentiment: "positive" | "negative" | "neutral";
 }
 
-// Mock API key - in a real app, this would be from environment variables
-const NEWS_API_KEY = 'demo'; // Using demo key for now
+// News API key
+const NEWS_API_KEY = '8ced36f60a0b4446aa14fd7a1d1a9b4e';
 
 export async function fetchStockNews(symbol?: string, category: string = 'business'): Promise<NewsArticle[]> {
   try {

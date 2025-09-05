@@ -29,8 +29,8 @@ interface StockData {
   financialRatios?: FinancialRatios | null;
 }
 
-// Mock API key - in a real app, this would be from environment variables
-const TWELVE_DATA_API_KEY = 'demo'; // Using demo key for now
+// Twelve Data API key
+const TWELVE_DATA_API_KEY = '855ede4efd3a442d86ba8c4befdf426c';
 
 export async function fetchStockData(symbol: string): Promise<StockData> {
   try {
