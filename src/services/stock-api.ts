@@ -29,8 +29,9 @@ interface StockData {
   financialRatios?: FinancialRatios | null;
 }
 
-// Twelve Data API key
+// API Keys
 const TWELVE_DATA_API_KEY = '855ede4efd3a442d86ba8c4befdf426c';
+const FINNHUB_API_KEY = 'd21ub39r01qp8ojgt6l0d21ub39r01qp8ojgt6lg';
 
 export async function fetchStockData(symbol: string): Promise<StockData> {
   try {
@@ -61,38 +62,40 @@ export async function fetchStockData(symbol: string): Promise<StockData> {
 
     let financialRatios: FinancialRatios | null = null;
 
-    // Try to fetch valuation ratios using /metrics endpoint
+    // Try to fetch financial ratios using Finnhub API
     try {
-      const metricsResponse = await fetch(
-        `https://api.twelvedata.com/metrics?symbol=${symbol}&apikey=${TWELVE_DATA_API_KEY}`
+      const finnhubResponse = await fetch(
+        `https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${FINNHUB_API_KEY}`
       );
       
-      if (metricsResponse.ok) {
-        const metricsData = await metricsResponse.json();
+      if (finnhubResponse.ok) {
+        const finnhubData = await finnhubResponse.json();
         
-        if (metricsData.status !== 'error') {
+        if (finnhubData && finnhubData.metric) {
+          const metrics = finnhubData.metric;
+          
           financialRatios = {
-            peRatio: parseFloat(metricsData.pe_ratio) || null,
-            pegRatio: null, // Not available in metrics endpoint
-            pbRatio: parseFloat(metricsData.pb_ratio) || null,
-            priceToSales: null, // Not available in metrics endpoint
-            debtToEquity: parseFloat(metricsData.debt_to_equity) || null,
-            returnOnEquity: null, // Not available in metrics endpoint
-            returnOnAssets: null, // Not available in metrics endpoint
-            profitMargin: null, // Not available in metrics endpoint
-            operatingMargin: null, // Not available in metrics endpoint
-            currentRatio: null, // Not available in metrics endpoint
-            quickRatio: null, // Not available in metrics endpoint
-            dividendYield: parseFloat(metricsData.dividend_yield) ? parseFloat(metricsData.dividend_yield) / 100 : null,
-            beta: null, // Not available in metrics endpoint
-            eps: null, // Not available in metrics endpoint
-            marketCap: null, // Not available in metrics endpoint
+            peRatio: metrics.peBasicExclExtraTTM || metrics.peTTM || null,
+            pegRatio: metrics.pegRatio || null,
+            pbRatio: metrics.pbAnnual || metrics.pbQuarterly || null,
+            priceToSales: metrics.psAnnual || metrics.psTTM || null,
+            debtToEquity: metrics.totalDebt2TotalEquityAnnual || metrics.totalDebt2TotalEquityQuarterly || null,
+            returnOnEquity: metrics.roeRfy || metrics.roeTTM || null,
+            returnOnAssets: metrics.roaRfy || metrics.roaTTM || null,
+            profitMargin: metrics.netProfitMarginTTM || metrics.netProfitMarginAnnual || null,
+            operatingMargin: metrics.operatingMarginTTM || metrics.operatingMarginAnnual || null,
+            currentRatio: metrics.currentRatioAnnual || metrics.currentRatioQuarterly || null,
+            quickRatio: metrics.quickRatioAnnual || metrics.quickRatioQuarterly || null,
+            dividendYield: metrics.dividendYieldIndicatedAnnual || null,
+            beta: metrics.beta || null,
+            eps: metrics.epsBasicExclExtraItemsTTM || metrics.epsTTM || null,
+            marketCap: metrics.marketCapitalization || null,
           };
         }
       }
     } catch (error) {
       // Financial ratios are optional, continue without them
-      console.warn('Failed to fetch valuation ratios:', error);
+      console.warn('Failed to fetch financial ratios from Finnhub:', error);
     }
 
     return {
