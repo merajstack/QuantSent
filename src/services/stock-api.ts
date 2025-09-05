@@ -46,7 +46,8 @@ export async function fetchStockData(symbol: string): Promise<StockData> {
     const quoteData = await quoteResponse.json();
     
     if (quoteData.status === 'error' || quoteData.code === 400) {
-      throw new Error(`Invalid stock symbol: ${symbol}`);
+      // Show the actual API error message instead of generic "invalid symbol"
+      throw new Error(quoteData.message || `Failed to fetch data for ${symbol}`);
     }
 
     // Calculate change and change percent
