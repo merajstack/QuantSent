@@ -61,42 +61,38 @@ export async function fetchStockData(symbol: string): Promise<StockData> {
 
     let financialRatios: FinancialRatios | null = null;
 
-    // Try to fetch financial ratios
+    // Try to fetch valuation ratios using /metrics endpoint
     try {
-      const fundamentalsResponse = await fetch(
-        `https://api.twelvedata.com/statistics?symbol=${symbol}&apikey=${TWELVE_DATA_API_KEY}`
+      const metricsResponse = await fetch(
+        `https://api.twelvedata.com/metrics?symbol=${symbol}&apikey=${TWELVE_DATA_API_KEY}`
       );
       
-      if (fundamentalsResponse.ok) {
-        const fundamentalsData = await fundamentalsResponse.json();
+      if (metricsResponse.ok) {
+        const metricsData = await metricsResponse.json();
         
-        if (fundamentalsData.status !== 'error') {
-          const stats = fundamentalsData.statistics || {};
-          const valuations = stats.valuations || {};
-          const financials = stats.financials || {};
-          
+        if (metricsData.status !== 'error') {
           financialRatios = {
-            peRatio: parseFloat(valuations.trailing_pe) || null,
-            pegRatio: parseFloat(valuations.peg_ratio) || null,
-            pbRatio: parseFloat(valuations.price_to_book) || null,
-            priceToSales: parseFloat(valuations.price_to_sales) || null,
-            debtToEquity: parseFloat(financials.debt_to_equity) || null,
-            returnOnEquity: parseFloat(financials.return_on_equity) ? parseFloat(financials.return_on_equity) / 100 : null,
-            returnOnAssets: parseFloat(financials.return_on_assets) ? parseFloat(financials.return_on_assets) / 100 : null,
-            profitMargin: parseFloat(financials.profit_margin) ? parseFloat(financials.profit_margin) / 100 : null,
-            operatingMargin: parseFloat(financials.operating_margin) ? parseFloat(financials.operating_margin) / 100 : null,
-            currentRatio: parseFloat(financials.current_ratio) || null,
-            quickRatio: parseFloat(financials.quick_ratio) || null,
-            dividendYield: parseFloat(valuations.dividend_yield) ? parseFloat(valuations.dividend_yield) / 100 : null,
-            beta: parseFloat(valuations.beta) || null,
-            eps: parseFloat(financials.earnings_per_share) || null,
-            marketCap: parseFloat(valuations.market_cap) || null,
+            peRatio: parseFloat(metricsData.pe_ratio) || null,
+            pegRatio: null, // Not available in metrics endpoint
+            pbRatio: parseFloat(metricsData.pb_ratio) || null,
+            priceToSales: null, // Not available in metrics endpoint
+            debtToEquity: parseFloat(metricsData.debt_to_equity) || null,
+            returnOnEquity: null, // Not available in metrics endpoint
+            returnOnAssets: null, // Not available in metrics endpoint
+            profitMargin: null, // Not available in metrics endpoint
+            operatingMargin: null, // Not available in metrics endpoint
+            currentRatio: null, // Not available in metrics endpoint
+            quickRatio: null, // Not available in metrics endpoint
+            dividendYield: parseFloat(metricsData.dividend_yield) ? parseFloat(metricsData.dividend_yield) / 100 : null,
+            beta: null, // Not available in metrics endpoint
+            eps: null, // Not available in metrics endpoint
+            marketCap: null, // Not available in metrics endpoint
           };
         }
       }
     } catch (error) {
       // Financial ratios are optional, continue without them
-      console.warn('Failed to fetch financial ratios:', error);
+      console.warn('Failed to fetch valuation ratios:', error);
     }
 
     return {
