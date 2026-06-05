@@ -1,4 +1,5 @@
 <h1>QuantSent – AI-Powered Stock Market Intelligence Platform</h1>
+<b>Preview Link:https://quant-sent.vercel.app/</b>
 
 <p>
 QuantSent is a <strong>web-based financial intelligence platform</strong> that combines 
